@@ -241,11 +241,64 @@ def cal_prob_of_inf(p_max, mean_gamma, sd_gamma, t_inf_max):
     return(p_t)
 
     
+
     
+# running simulations    
+
+
+def sim(list_hh_ind_input, n_ind_input, t_max, graph_input, max_recovery_t_input, p_t_input):    
+    f = open('test.csv', 'w')
+    f.write("infector_ID, infector_type_of_hh, infectee_ID, infectee_type_of_hh, time \n")
+
+    g = open('sim.csv', 'w')
+    g.write("S, I, R, t \n")    
+
+    I_temp = len([i for i in list_hh_ind_input[1] if i.get_state() == "I"])
+    S_temp = n_ind_input - I_temp
+    R_temp = 0    
     
-    
-    
-    
+    t = 0
+    while t <= t_max:
+        inds = list(graph_input.m_adj_list.keys()) # list of all individuals in the population
+        infs = [ind for ind in inds if ind.get_state() == "I"] # list of all infected individuals in the population
+        for inf in infs:
+            time_since_infection = t - inf.get_time_of_infection()
+            if time_since_infection >= max_recovery_t_input:
+                inf.ItoR()
+                I_temp -= 1
+                R_temp += 1
+            else:
+                connections = graph_input.m_adj_list[inf] # set of all connections for a given infected individual
+                sus = [con for con in connections if con[0].get_state() == "S"]
+                n_to_infect = int(np.random.binomial(len(sus), p_t_input[time_since_infection], 1)) # this depends on how long inf individual has been infectious
+                sus_selected = random.sample(sus, n_to_infect) # selecting susceptibles who will get infected
+                for sus_sel in sus_selected:
+                    # Do the following actions now that is person is getting infected
+                    sus_sel[0].add_time_of_infection(t)
+                    sus_sel[0].add_infector_ID(inf.get_ID())            
+                    sus_sel[0].add_infector_hh(inf.get_hh())          
+                    sus_sel[0].add_infector_type_of_hh(inf.get_type_of_hh())           
+                    sus_sel[0].StoI()           
+
+                    # write these datapoints into a file
+                    infector_ID_temp = str(inf.get_ID())
+                    infector_type_of_hh_temp = str(inf.get_type_of_hh())            
+                    infectee_ID_temp = str(sus_sel[0].get_ID())
+                    infectee_type_of_hh_temp = str(sus_sel[0].get_type_of_hh())            
+                    time_of_infection_temp = str(t)
+                    f.write(infector_ID_temp+","+infector_type_of_hh_temp+","+infectee_ID_temp+","+infectee_type_of_hh_temp+","+time_of_infection_temp+"\n")
+
+                    # update SIR dataset
+                    S_temp -= 1
+                    I_temp += 1
+
+        t += 1
+        # update SIR dataset
+        g.write(str(S_temp)+","+str(I_temp)+","+str(R_temp)+","+str(t)+"\n")
+
+    f.close()
+    g.close()
+        
     
     
     
