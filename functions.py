@@ -253,10 +253,10 @@ def sim(n_iter_input, n_hh_input, type_of_hh_array_input, prob_type_of_hh_array_
 
     # open a csv file to write outputs
     f = open('test.csv', 'w')
-    f.write("infector_ID, infector_type_of_hh, infectee_ID, infectee_type_of_hh, time, iter \n")
+    f.write("infector_ID,infector_type_of_hh,infectee_ID,infectee_type_of_hh,time,iter \n")
 
     g = open('sim.csv', 'w')
-    g.write("S, I, R, time, iter \n")     
+    g.write("S,I,R,time,iter \n")     
     
     # start iterations
     iter_count = 1
