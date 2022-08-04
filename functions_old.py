@@ -37,8 +37,7 @@ class HH:
 # Class of individual (so that properties of an individual stay connected)
 # Make methods to perform any changes that can happen to an individual
 class Individual:
-    def __init__(self, state, hh, ID, type_of_hh, hh_size, time_of_infection, infector_ID, infector_hh, infector_type_of_hh,\
-                n_within_area_contacts = 0, n_outside_area_contacts = 0): # intialise an individual with these details
+    def __init__(self, state, hh, ID, type_of_hh, hh_size, time_of_infection, infector_ID, infector_hh, infector_type_of_hh): # intialise an individual with these details
         self._state = state
         self._hh = hh
         self._ID = ID
@@ -48,8 +47,6 @@ class Individual:
         self._infector_ID = infector_ID
         self._infector_hh = infector_hh
         self._infector_type_of_hh = infector_type_of_hh
-        self._n_within_area_contacts = n_within_area_contacts
-        self._n_outside_area_contacts = n_outside_area_contacts
         hh.add_individual(self) # Now add this individual to houshold it belongs to by using the method from Household class
 
     def StoI(self):
@@ -76,13 +73,7 @@ class Individual:
         self._infector_hh = new_infector_hh 
         
     def add_infector_type_of_hh(self, new_infector_type_of_hh): # if this method is used update the person infecting this Susceptible person
-        self._infector_type_of_hh = new_infector_type_of_hh     
-        
-    def add_n_within_area_contacts(self, new_n_within_area_contacts):
-        self._n_within_area_contacts = new_n_within_area_contacts
-        
-    def add_n_outside_area_contacts(self, new_n_outside_area_contacts):
-        self._n_outside_area_contacts = new_n_outside_area_contacts        
+        self._infector_type_of_hh = new_infector_type_of_hh         
 
     def get_state(self):
         return self._state # Make state a public attribute, so it can called outside
@@ -110,12 +101,6 @@ class Individual:
 
     def get_infector_type_of_hh(self):
         return self._infector_type_of_hh # Make state a public attribute, so it can called outside
-    
-    def get_n_within_area_contacts(self):
-        return self._n_within_area_contacts
-    
-    def get_n_outside_area_contacts(self):
-        return self._n_outside_area_contacts
 
 
 
@@ -135,11 +120,9 @@ def create_hh(n_hh_input, type_of_hh_array_input, prob_type_of_hh_array_input, \
         hh = HH()
         r_type_of_hh = np.random.choice(type_of_hh_array_input,  p = prob_type_of_hh_array_input) # to get type of hh for this realisation
         mean_hh_size_temp = mean_hh_size_array_input[r_type_of_hh] # this gives mean hh size corresponding to type of hh
-#         n_hh_size_temp = np.random.poisson(mean_hh_size_temp,1) # this gives a random number from Poisson with given mean
-#         # now create individuals in this hh 
-        n_hh_size_temp = int(mean_hh_size_temp) # this gives a random number from Poisson with given mean
-        # now create individuals in this hh         
-        for j in range(n_hh_size_temp):
+        n_hh_size_temp = np.random.poisson(mean_hh_size_temp,1) # this gives a random number from Poisson with given mean
+        # now create individuals in this hh 
+        for j in range(n_hh_size_temp[0]):
             id_tick = id_tick+1
             r_inf = random.random() # to assign initial infectious state
             if r_inf <= initial_prob_I_array_input[r_type_of_hh]: # because each type of hh has initial no. of infecteds
@@ -179,77 +162,56 @@ class Graph:
 import itertools
 
 # Function to create initial adjacency list 
-# def create_adjacency_list(list_hh_ind_input, n_hh_input, n_ind_input, type_of_hh_array_input, mean_n_contacts_within_area_input, mean_n_contacts_outside_area_input):
-    
-# #     # Check conditions:
-# #     for i range(len(type_of_hh_array_input)):
-# #         mean_n_contacts_outside_area_input[i]*len(list_hh_ind_input[2][i]) >= 
-    
-#     # Initialising the adjacency list
-#     graph_temp = Graph(list_hh_ind_input[1])
+def create_adjacency_list(list_hh_ind_input, n_hh_input, n_ind_input, type_of_hh_array_input, mean_n_contacts_within_area_input, mean_n_contacts_outside_area_input):
+    # Initialising the adjacency list
+    graph_temp = Graph(list_hh_ind_input[1])
 
-#     # For connecting people in the same hh
-#     count_within_hh_contacts_input = 0
-#     for i in range(n_hh_input):
-#         hh_inds_temp = list_hh_ind_input[0][i].get_individuals()
-#         hh_size_temp = len(hh_inds_temp)
-#         list_contacts_temp = hh_inds_temp
-#         # now making combinations of 2s from the list of contacts and adding them as edges
-#         for contacts in itertools.combinations(list_contacts_temp, 2):
-#             graph_temp.add_edge(contacts[0], contacts[1], "same_hh") 
+    # For connecting people in the same hh
+    count_within_hh_contacts_input = 0
+    for i in range(n_hh_input):
+        hh_inds_temp = list_hh_ind_input[0][i].get_individuals()
+        hh_size_temp = len(hh_inds_temp)
+        list_contacts_temp = hh_inds_temp
+        # now making combinations of 2s from the list of contacts and adding them as edges
+        for contacts in itertools.combinations(list_contacts_temp, 2):
+            graph_temp.add_edge(contacts[0], contacts[1], "same_hh") 
 
-#     # For connecting people from different hh (type of hh also mentioned as area)
-#     # starting with list of individuals in area 0
-#     for area_list_index in range(len(list_hh_ind_input[2])):
-#         area_list_inds = list_hh_ind_input[2][area_list_index]
-#         # looping through individuals in a given area
-#         for ind1_temp in area_list_inds:
-#             n_contacts_within_area = mean_n_contacts_within_area_input[area_list_index]
-#             k=ind1_temp
-#             while k <(int(n_contacts_within_area)): # will pick how many contacts can ind1 have within their area
-#                 ind2_temp = random.sample(area_list_inds, 1)[0] # picking random ind2
-#                 if ind2_temp.get_hh() != ind1_temp.get_hh():
-#                     list_contacts_non_hh_temp.append(ind2_temp)
-#                     graph_temp.add_edge(ind1_temp, ind2_temp, "same_area") 
-#                     k += 1  
-            
 
-#     # For connecting people from different hh (type of hh also mentioned as area)
-#     for i in range(n_ind_input):
-#         ind1_temp = list_hh_ind_input[1][i] # choosing ind1
-#         ind1_type_of_hh_temp = ind1_temp.get_type_of_hh() # checking ind1's area
-#         list_contacts_non_hh_temp = [] # empty list of all contacts ind1 can have
 
-#         for area_list_index in range(len(type_of_hh_array_input)): # going through list of all areas     
-#             # when looking at same area which have individuals
-#             # append contacts within same area to the list
-#             if (area_list_index == ind1_type_of_hh_temp) & (len(list_hh_ind_input[2][area_list_index])>0): 
-# #                 n_contacts_within_area = np.random.poisson(mean_n_contacts_within_area_input[area_list_index],1)
-#                 n_contacts_within_area = mean_n_contacts_within_area_input[area_list_index]
-#                 k=0
-#                 while k <(int(n_contacts_within_area)): # will pick how many contacts can ind1 have within their area
-#                     ind2_temp = random.sample(list_hh_ind_input[2][area_list_index], 1)[0] # picking random ind2
-#                     if ind2_temp.get_hh() != ind1_temp.get_hh():
-#                         list_contacts_non_hh_temp.append(ind2_temp)
-#                         k += 1     
+    # For connecting people from different hh (type of hh also mentioned as area)
+    for i in range(n_ind_input):
+        ind1_temp = list_hh_ind_input[1][i] # choosing ind1
+        ind1_type_of_hh_temp = ind1_temp.get_type_of_hh() # checking ind1's area
+        list_contacts_non_hh_temp = [] # empty list of all contacts ind1 can have
 
-#             # when looking at other area which have individuals
-#             # append contacts outside area to the list
-#             elif (area_list_index != ind1_type_of_hh_temp) & (len(list_hh_ind_input[2][area_list_index])>0): 
-# #                 n_contacts_outside_area = np.random.poisson(mean_n_contacts_outside_area_input[area_list_index],1)
-#                 n_contacts_outside_area = mean_n_contacts_outside_area_input[area_list_index]
-#                 for l in range(int(n_contacts_outside_area)): # will pick how many contacts can ind1 have in this area
-#                     ind2_temp = random.sample(list_hh_ind_input[2][area_list_index], 1)[0] # picking random ind2
-#                     list_contacts_non_hh_temp.append(ind2_temp)
+        for area_list_index in range(len(type_of_hh_array_input)): # going through list of all areas     
+            # when looking at same area which have individuals
+            # append contacts within same area to the list
+            if (area_list_index == ind1_type_of_hh_temp) & (len(list_hh_ind_input[2][area_list_index])>0): 
+                n_contacts_within_area = np.random.poisson(mean_n_contacts_within_area_input[area_list_index],1)
+                k=0
+                while k <(int(n_contacts_within_area)): # will pick how many contacts can ind1 have within their area
+                    ind2_temp = random.sample(list_hh_ind_input[2][area_list_index], 1)[0] # picking random ind2
+                    if ind2_temp.get_hh() != ind1_temp.get_hh():
+                        list_contacts_non_hh_temp.append(ind2_temp)
+                        k += 1     
 
-#         # now making combinations of 2s from the list of contacts for ind1 and adding them as edges 
-#         for ind2_index in list_contacts_non_hh_temp:
-#             if ind1_temp.get_type_of_hh() == ind2_index.get_type_of_hh():
-#                 graph_temp.add_edge(ind1_temp, ind2_index, "same_area")  
-#             else:
-#                 graph_temp.add_edge(ind1_temp, ind2_index, "outside_area")              
+            # when looking at other area which have individuals
+            # append contacts outside area to the list
+            elif (area_list_index != ind1_type_of_hh_temp) & (len(list_hh_ind_input[2][area_list_index])>0): 
+                n_contacts_outside_area = np.random.poisson(mean_n_contacts_outside_area_input[area_list_index],1)
+                for l in range(int(n_contacts_outside_area)): # will pick how many contacts can ind1 have in this area
+                    ind2_temp = random.sample(list_hh_ind_input[2][area_list_index], 1)[0] # picking random ind2
+                    list_contacts_non_hh_temp.append(ind2_temp)
+
+        # now making combinations of 2s from the list of contacts for ind1 and adding them as edges 
+        for ind2_index in list_contacts_non_hh_temp:
+            if ind1_temp.get_type_of_hh() == ind2_index.get_type_of_hh():
+                graph_temp.add_edge(ind1_temp, ind2_index, "same_area")  
+            else:
+                graph_temp.add_edge(ind1_temp, ind2_index, "outside_area")              
  
-#     return(graph_temp)    
+    return(graph_temp)    
     
         
     
