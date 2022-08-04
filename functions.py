@@ -449,8 +449,8 @@ def sim(n_iter_input, n_hh_input, type_of_hh_array_input, prob_type_of_hh_array_
     g = open('sim.csv', 'w')
     g.write("S,I,R,time,iter \n") 
     
-    infs = open('infs.csv', 'w')
-    infs.write("area,n_infs,time,iter")
+    infs_file = open('infs.csv', 'w')
+    infs_file.write("area_0,area_1,area_2,time,iter \n")
     
     # start iterations
     iter_count = 1
@@ -477,6 +477,11 @@ def sim(n_iter_input, n_hh_input, type_of_hh_array_input, prob_type_of_hh_array_
         S_temp = n_ind_input - I_temp
         R_temp = 0    
         g.write(str(S_temp)+","+str(I_temp)+","+str(R_temp)+","+str(t)+","+str(iter_count)+"\n")
+        
+        I_0 = len([i for i in list_hh_ind_input[1] if (i.get_state() == "I") & (i.get_type_of_hh() == 0)])
+        I_1 = len([i for i in list_hh_ind_input[1] if (i.get_state() == "I") & (i.get_type_of_hh() == 1)])
+        I_2 = len([i for i in list_hh_ind_input[1] if (i.get_state() == "I") & (i.get_type_of_hh() == 2)])
+        infs_file.write(str(I_0)+","+str(I_1)+","+str(I_2)+","+str(t)+","+str(iter_count)+"\n")
 
         # running the simulation for this population till maximum time specified (t_max_input)
         while t <= t_max_input:
@@ -497,6 +502,12 @@ def sim(n_iter_input, n_hh_input, type_of_hh_array_input, prob_type_of_hh_array_
                     inf.ItoR()
                     I_temp -= 1
                     R_temp += 1
+                    if inf.get_type_of_hh() == 0:
+                        I_0 -=1
+                    elif inf.get_type_of_hh() == 1:
+                        I_1 -= 1
+                    else:
+                        I_2 -= 1
                 
                 # else check if this individual will infect their contacts
                 else:                    
@@ -527,12 +538,20 @@ def sim(n_iter_input, n_hh_input, type_of_hh_array_input, prob_type_of_hh_array_
                         # update S, I, R counts
                         S_temp -= 1
                         I_temp += 1
+                        
+                        if inf.get_type_of_hh() == 0:
+                            I_0 +=1
+                        elif inf.get_type_of_hh() == 1:
+                            I_1 += 1
+                        else:
+                            I_2 += 1
 
             # increase time by one day
             t += 1
             
             # writing to SIR output file
             g.write(str(S_temp)+","+str(I_temp)+","+str(R_temp)+","+str(t)+","+str(iter_count)+"\n")
+            infs_file.write(str(I_0)+","+str(I_1)+","+str(I_2)+","+str(t)+","+str(iter_count)+"\n")
         
         print("Simulation ", iter_count, " is complete.")
         # the simulation for this population is complete, so increase iter_count by 1
